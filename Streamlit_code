@@ -1,0 +1,35 @@
+import streamlit as st
+import numpy as np
+import tensorflow as tf
+import cv2
+import pickle
+from PIL import Image
+
+# Load the model from file (assuming it's a Keras model saved using .h5 or SavedModel)
+@st.cache_resource
+def load_model():
+    model = tf.keras.models.load_model('/mnt/data/model (7).pkl')  # update this if the model was saved differently
+    return model
+
+model = load_model()
+
+st.title("MNIST Digit Classifier")
+
+# Upload image
+uploaded_file = st.file_uploader("Upload a 28x28 grayscale image of a digit", type=["png", "jpg", "jpeg"])
+
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).convert("L")  # convert to grayscale
+    image = image.resize((28, 28))
+    
+    st.image(image, caption="Uploaded Image", width=150)
+    
+    img_array = np.array(image)
+    img_array = img_array.reshape(1, 28, 28, 1).astype('float32') / 255.0  # normalize
+
+    # Make prediction
+    prediction = model.predict(img_array)
+    predicted_digit = np.argmax(prediction)
+
+    st.subheader("Prediction")
+    st.write(f"The digit is most likely: **{predicted_digit}**")
